@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artizan Film | Sinematik Portfolyo</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Framer Motion CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        headline: ["Space Grotesk", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Manrope", "sans-serif"],
+                    },
+                    colors: {
+                        background: '#131313',
+                        surface: '#131313',
+                        'surface-container': '#201f1f',
+                        primary: '#ffc177',
+                        'primary-container': '#f59e19',
+                        'on-surface': '#e5e2e1',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.05;
+            background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+        }
+
+        .text-glow {
+            text-shadow: 0 0 20px rgba(255, 193, 119, 0.3);
+        }
+
+        .cinematic-overlay {
+            background: linear-gradient(to top, rgba(19,19,19,0.95) 0%, rgba(19,19,19,0.4) 40%, rgba(19,19,19,0) 100%);
+        }
+
+        @keyframes lightLeak {
+            0% { opacity: 0.1; transform: translate(-10%, -10%) scale(1); }
+            50% { opacity: 0.3; transform: translate(10%, 10%) scale(1.1); }
+            100% { opacity: 0.1; transform: translate(-10%, -10%) scale(1); }
+        }
+
+        .light-leak {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255, 193, 119, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            animation: lightLeak 15s infinite ease-in-out;
+        }
+
+        .reveal-mask {
+            overflow: hidden;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, AnimatePresence, useScroll, useTransform } = FramerMotion;
+
+        // Lucide Icon Helper
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const LucideIcon = lucide[name];
+            return LucideIcon ? <LucideIcon size={size} className={className} /> : null;
+        };
+
+        const Navbar = ({ currentPage, setPage }) => {
+            const [isScrolled, setIsScrolled] = useState(false);
+            useEffect(() => {
+                const handleScroll = () => setIsScrolled(window.scrollY > 50);
+                window.addEventListener("scroll", handleScroll);
+                return () => window.removeEventListener("scroll", handleScroll);
+            }, []);
+
+            return (
+                <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-[#131313]/80 backdrop-blur-xl py-4' : 'bg-gradient-to-b from-[#131313] to-transparent py-8'}`}>
+                    <div className="flex justify-between items-center px-6 md:px-12 w-full max-w-[1920px] mx-auto">
+                        <button onClick={() => setPage('home')} className="text-2xl font-bold tracking-tighter text-on-surface font-headline uppercase">ARTIZAN FILM</button>
+                        <div className="hidden md:flex items-center space-x-12 font-headline uppercase tracking-widest text-[11px]">
+                            {['home', 'projects', 'team'].map(id => (
+                                <button key={id} onClick={() => setPage(id)} className={currentPage === id ? 'text-primary' : 'text-on-surface/70'}>
+                                    {id === 'home' ? 'Anasayfa' : id === 'projects' ? 'Projeler' : 'Ekibimiz'}
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={() => setPage('contact')} className="text-primary font-headline uppercase tracking-widest text-[11px]">İletişim</button>
+                    </div>
+                </nav>
+            );
+        };
+
+        const HomePage = ({ setPage }) => {
+            const heroRef = useRef(null);
+            const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+            const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+            const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+
+            return (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <section ref={heroRef} className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+                        <motion.div 
+                            style={{ y: heroY, scale: heroScale }}
+                            className="absolute inset-0 bg-cover bg-center opacity-40 grayscale"
+                            style={{ backgroundImage: "url('https://picsum.photos/seed/cinema/1920/1080')" }}
+                        />
+                        <div className="relative z-10 text-center px-6">
+                            <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="font-headline text-7xl md:text-9xl font-bold tracking-tighter text-glow">ARTIZAN FILM</motion.h1>
+                            <p className="font-label text-xs tracking-[0.5em] text-primary uppercase mt-4">DİJİTAL AUTEUR. HİKAYELERİ HASSASİYETLE İŞLİYORUZ.</p>
+                        </div>
+                    </section>
+
+                    <section className="py-32 px-6 md:px-24">
+                        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-24">
+                            <h2 className="font-headline text-4xl md:text-6xl font-medium leading-tight">Sadece görüntü kaydetmiyoruz. <span className="italic text-primary">Niyeti</span> kadraja alıyoruz.</h2>
+                            <p className="font-body text-lg text-on-surface/70 leading-relaxed">Artizan Film, teknik mükemmeliyetin sanatsal sezgiyle buluştuğu butik bir prodüksiyon evidir. Dijital gürültü çağında, sinematik estetiği önceliklendiriyor, kalıcılığı olan görsel anlatılar inşa ediyoruz.</p>
+                        </div>
+                    </section>
+                </motion.div>
+            );
+        };
+
+        const App = () => {
+            const [page, setPage] = useState('home');
+            return (
+                <div className="min-h-screen flex flex-col font-body">
+                    <div className="film-grain"></div>
+                    <Navbar currentPage={page} setPage={setPage} />
+                    <main className="flex-grow">
+                        {page === 'home' && <HomePage setPage={setPage} />}
+                        {page !== 'home' && <div className="pt-40 text-center text-primary uppercase tracking-widest">Bu bölüm tam sürümde mevcuttur.</div>}
+                    </main>
+                    <footer className="py-12 border-t border-white/10 text-center opacity-40 text-xs tracking-widest uppercase">
+                        © 2026 ARTIZAN FILM PRODÜKSİYON
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
